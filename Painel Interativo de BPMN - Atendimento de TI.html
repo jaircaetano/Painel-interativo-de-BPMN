@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluxo de Atendimento de TI - Quem Faz o Que</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- BPMN.js Viewer CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.0.2/dist/assets/diagram-js.css">
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.0.2/dist/assets/bpmn-font/css/bpmn-embedded.css">
+  <style>
+    .highlight-element {
+      outline: 4px solid #3b82f6 !important;
+      border-radius: 6px;
+    }
+    .bjs-powered-by {
+      display: none !important;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Header Section -->
+  <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-30 shadow-md">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 bg-blue-600/20 text-blue-400 rounded-lg border border-blue-500/30">
+        <i class="fa-solid fa-sitemap text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-white tracking-wide">Fluxo de Atendimento de TI</h1>
+        <p class="text-xs text-slate-400">Modelo de Governança de Escalamento & Matriz de Papéis ("Quem Faz o Que")</p>
+      </div>
+    </div>
+
+    <!-- Global Actions -->
+    <div class="flex items-center gap-2">
+      <button onclick="switchTab('diagram')" id="btn-tab-diagram" class="px-3.5 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all flex items-center gap-2 shadow">
+        <i class="fa-solid fa-diagram-project"></i> Diagrama BPMN
+      </button>
+      <button onclick="switchTab('roles')" id="btn-tab-roles" class="px-3.5 py-1.5 text-xs font-semibold rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all flex items-center gap-2">
+        <i class="fa-solid fa-users-gear"></i> Papéis & Responsabilidades
+      </button>
+      <button onclick="switchTab('sla')" id="btn-tab-sla" class="px-3.5 py-1.5 text-xs font-semibold rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all flex items-center gap-2">
+        <i class="fa-solid fa-clock flex"></i> Matriz de SLA & Escalamento
+      </button>
+      <button onclick="exportDiagramSVG()" class="px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 transition-all flex items-center gap-1.5">
+        <i class="fa-solid fa-download"></i> Baixar SVG
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+    <!-- TAB 1: DIAGRAM VIEW -->
+    <div id="tab-diagram-view" class="flex-1 flex flex-col md:flex-row w-full h-[calc(100vh-73px)]">
+      <!-- BPMN Canvas Container -->
+      <div class="flex-1 bg-white relative flex flex-col h-full overflow-hidden">
+        <!-- Canvas Toolbar -->
+        <div class="absolute top-4 left-4 z-10 flex gap-2 bg-slate-900/80 backdrop-blur-md p-1.5 rounded-lg border border-slate-700 shadow-lg text-slate-200">
+          <button onclick="zoomIn()" class="p-2 hover:bg-slate-700 rounded transition" title="Aumentar Zoom">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+          </button>
+          <button onclick="zoomOut()" class="p-2 hover:bg-slate-700 rounded transition" title="Diminuir Zoom">
+            <i class="fa-solid fa-magnifying-glass-minus"></i>
+          </button>
+          <button onclick="zoomReset()" class="p-2 hover:bg-slate-700 rounded transition" title="Ajustar à Tela">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+          <div class="h-5 w-px bg-slate-700 my-auto"></div>
+          <span class="text-xs px-2 my-auto font-mono text-slate-400" id="zoom-indicator">100%</span>
+        </div>
+
+        <!-- Instructions Overlay -->
+        <div class="absolute bottom-4 left-4 z-10 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded border border-slate-700 text-xs text-slate-300 pointer-events-none flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-blue-400"></i> Clique em qualquer elemento no diagrama para inspecionar os detalhes do fluxo.
+        </div>
+
+        <!-- BPMN Canvas Element -->
+        <div id="canvas" class="w-full h-full bg-slate-900"></div>
+      </div>
+
+      <!-- Inspector Sidebar -->
+      <aside class="w-full md:w-96 bg-slate-800 border-l border-slate-700 p-5 flex flex-col h-full overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-700">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <i class="fa-solid fa-circle-nodes text-blue-400"></i> Detalhes do Elemento
+          </h2>
+          <span id="selected-type-badge" class="px-2 py-0.5 text-[10px] uppercase tracking-wider font-semibold bg-slate-700 text-slate-300 rounded">Geral</span>
+        </div>
+
+        <div id="inspector-content" class="py-4 space-y-5 flex-1">
+          <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/60">
+            <h3 id="inspector-title" class="text-base font-semibold text-white">Selecione uma etapa no diagrama</h3>
+            <p id="inspector-desc" class="text-xs text-slate-400 mt-2 leading-relaxed">
+              Clique em uma tarefa, decisão ou raia (lane) para visualizar a descrição funcional, responsável, critério de decisão e saídas esperadas.
+            </p>
+          </div>
+
+          <!-- Fast Navigation List -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Raias / Grupos de Atendimento</h4>
+            <div class="space-y-1.5" id="lanes-quick-nav">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-700 text-center">
+          <button onclick="zoomReset()" class="text-xs text-blue-400 hover:underline">
+            <i class="fa-solid fa-rotate-left"></i> Redefinir visualização completa
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- TAB 2: ROLES & RESPONSIBILITIES -->
+    <div id="tab-roles-view" class="hidden flex-1 p-6 overflow-y-auto w-full bg-slate-900">
+      <div class="max-w-6xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">Atribuições por Nível de Atendimento</h2>
+          <p class="text-sm text-slate-400 mt-1">Detalhamento da estrutura hierárquica do processo de suporte de TI ("Quem Faz o Que").</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="roles-cards-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SLA & ESCALATION MATRIX -->
+    <div id="tab-sla-view" class="hidden flex-1 p-6 overflow-y-auto w-full bg-slate-900">
+      <div class="max-w-5xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">Matriz de Escalamento & SLA Recomendado</h2>
+          <p class="text-sm text-slate-400 mt-1">Diretrizes operacionais para transferência de chamados entre camadas de atendimento.</p>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-lg">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider text-[11px] font-semibold border-b border-slate-700">
+              <tr>
+                <th class="px-4 py-3.5">Nível / Perfil</th>
+                <th class="px-4 py-3.5">Escopo Principal</th>
+                <th class="px-4 py-3.5">SLA de 1ª Resposta</th>
+                <th class="px-4 py-3.5">SLA de Resolução</th>
+                <th class="px-4 py-3.5">Gargalo / Gatilho de Escalamento</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/60" id="sla-table-body">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Flow Description Box -->
+        <div class="p-5 bg-blue-950/30 border border-blue-800/50 rounded-xl text-xs text-slate-300 space-y-3">
+          <h3 class="text-sm font-bold text-blue-400 flex items-center gap-2">
+            <i class="fa-solid fa-diagram-next"></i> Regra Geral de Encaminhamento (N2 -> N3 / Especialistas)
+          </h3>
+          <p class="leading-relaxed">
+            O <strong>Suporte N2</strong> atua como o ponto focal de triagem técnica especializada. Ao constatar que um incidente requer especialização avançada, a decisão de encaminhamento segue a regra:
+          </p>
+          <ul class="list-disc pl-5 space-y-1 text-slate-300">
+            <li><strong>Falha Rara / Bug do Fabricante:</strong> Encaminhar para <span class="text-amber-400 font-semibold">Suporte N3</span>.</li>
+            <li><strong>Falhas de Latência, VPN, Wi-Fi ou Roteamento:</strong> Encaminhar para <span class="text-cyan-400 font-semibold">Analista de Redes</span>.</li>
+            <li><strong>Problemas em Servidores, Active Directory, Cloud ou Backup:</strong> Encaminhar para <span class="text-indigo-400 font-semibold">Analista de Infraestrutura</span>.</li>
+            <li><strong>Falhas Físicas, Hardware, Cabeamento e Atendimento Local:</strong> Encaminhar para <span class="text-emerald-400 font-semibold">Field Services</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BPMN.js Viewer Library -->
+  <script src="https://unpkg.com/bpmn-js@17.0.2/dist/bpmn-viewer.production.min.js"></script>
+
+  <script>
+    // Embedded BPMN 2.0 XML
+    const bpmnXML = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    id="Definitions_1"
+                    targetNamespace="http://bizagi.com/bpmn20"
+                    exporter="Claude" exporterVersion="1.0">
+
+  <bpmn2:collaboration id="Collaboration_1">
+    <bpmn2:participant id="Participant_1" name="Fluxo de Atendimento de TI - Quem Faz o Que" processRef="Process_1" />
+  </bpmn2:collaboration>
+
+  <bpmn2:process id="Process_1" name="Atendimento de TI" isExecutable="false">
+    <bpmn2:laneSet id="LaneSet_1">
+      <bpmn2:lane id="Lane_Usuario" name="Usuario">
+        <bpmn2:flowNodeRef>StartEvent_1</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_ServiceDesk" name="Service Desk">
+        <bpmn2:flowNodeRef>Task_ServiceDesk</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_HelpDesk" name="Help Desk">
+        <bpmn2:flowNodeRef>Task_HelpDesk</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>Gateway_HD</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_HD</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_N1" name="Suporte N1">
+        <bpmn2:flowNodeRef>Task_N1</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>Gateway_N1</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_N1</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_N2" name="Suporte N2">
+        <bpmn2:flowNodeRef>Task_N2</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>Gateway_N2</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_N2</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_N3" name="Suporte N3">
+        <bpmn2:flowNodeRef>Task_N3</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_N3</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_Redes" name="Analista de Redes">
+        <bpmn2:flowNodeRef>Task_Redes</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_Redes</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_Infra" name="Analista de Infraestrutura">
+        <bpmn2:flowNodeRef>Task_Infra</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_Infra</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+      <bpmn2:lane id="Lane_Field" name="Field Services">
+        <bpmn2:flowNodeRef>Task_Field</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>EndEvent_Field</bpmn2:flowNodeRef>
+      </bpmn2:lane>
+    </bpmn2:laneSet>
+
+    <bpmn2:startEvent id="StartEvent_1" name="Usuario identifica necessidade e abre o chamado">
+      <bpmn2:outgoing>SF1</bpmn2:outgoing>
+    </bpmn2:startEvent>
+
+    <bpmn2:task id="Task_ServiceDesk" name="Registrar chamado, comunicar e acompanhar andamento">
+      <bpmn2:incoming>SF1</bpmn2:incoming>
+      <bpmn2:outgoing>SF2</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:task id="Task_HelpDesk" name="Prestar apoio direto a duvidas e problemas cotidianos">
+      <bpmn2:incoming>SF2</bpmn2:incoming>
+      <bpmn2:outgoing>SF3</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:exclusiveGateway id="Gateway_HD" name="Resolvido no Help Desk?">
+      <bpmn2:incoming>SF3</bpmn2:incoming>
+      <bpmn2:outgoing>SF4</bpmn2:outgoing>
+      <bpmn2:outgoing>SF5</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <bpmn2:endEvent id="EndEvent_HD" name="Chamado encerrado">
+      <bpmn2:incoming>SF4</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:task id="Task_N1" name="Triagem: acessos, orientacoes e solucoes conhecidas">
+      <bpmn2:incoming>SF5</bpmn2:incoming>
+      <bpmn2:outgoing>SF6</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:exclusiveGateway id="Gateway_N1" name="Resolvido em N1?">
+      <bpmn2:incoming>SF6</bpmn2:incoming>
+      <bpmn2:outgoing>SF7</bpmn2:outgoing>
+      <bpmn2:outgoing>SF8</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <bpmn2:endEvent id="EndEvent_N1" name="Chamado encerrado">
+      <bpmn2:incoming>SF7</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:task id="Task_N2" name="Investigar causa e aplicar correcoes tecnicas complexas">
+      <bpmn2:incoming>SF8</bpmn2:incoming>
+      <bpmn2:outgoing>SF9</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:exclusiveGateway id="Gateway_N2" name="Como escalonar?">
+      <bpmn2:incoming>SF9</bpmn2:incoming>
+      <bpmn2:outgoing>SF10</bpmn2:outgoing>
+      <bpmn2:outgoing>SF11</bpmn2:outgoing>
+      <bpmn2:outgoing>SF12</bpmn2:outgoing>
+      <bpmn2:outgoing>SF13</bpmn2:outgoing>
+      <bpmn2:outgoing>SF14</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+
+    <bpmn2:endEvent id="EndEvent_N2" name="Chamado encerrado">
+      <bpmn2:incoming>SF10</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:task id="Task_N3" name="Analisar causa raiz com fabricante/especialista (falhas raras, produto, arquitetura)">
+      <bpmn2:incoming>SF11</bpmn2:incoming>
+      <bpmn2:outgoing>SF15</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:task id="Task_Redes" name="Diagnosticar conectividade, Wi-Fi, VPN, seguranca e desempenho de rede">
+      <bpmn2:incoming>SF12</bpmn2:incoming>
+      <bpmn2:outgoing>SF16</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:task id="Task_Infra" name="Ajustar servidores, identidade, nuvem, backup e armazenamento">
+      <bpmn2:incoming>SF13</bpmn2:incoming>
+      <bpmn2:outgoing>SF17</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:task id="Task_Field" name="Realizar atendimento presencial: equipamentos, instalacoes e salas de reuniao">
+      <bpmn2:incoming>SF14</bpmn2:incoming>
+      <bpmn2:outgoing>SF18</bpmn2:outgoing>
+    </bpmn2:task>
+
+    <bpmn2:endEvent id="EndEvent_N3" name="Chamado encerrado">
+      <bpmn2:incoming>SF15</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:endEvent id="EndEvent_Redes" name="Chamado encerrado">
+      <bpmn2:incoming>SF16</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:endEvent id="EndEvent_Infra" name="Chamado encerrado">
+      <bpmn2:incoming>SF17</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:endEvent id="EndEvent_Field" name="Chamado encerrado">
+      <bpmn2:incoming>SF18</bpmn2:incoming>
+    </bpmn2:endEvent>
+
+    <bpmn2:sequenceFlow id="SF1" sourceRef="StartEvent_1" targetRef="Task_ServiceDesk" />
+    <bpmn2:sequenceFlow id="SF2" sourceRef="Task_ServiceDesk" targetRef="Task_HelpDesk" />
+    <bpmn2:sequenceFlow id="SF3" sourceRef="Task_HelpDesk" targetRef="Gateway_HD" />
+    <bpmn2:sequenceFlow id="SF4" sourceRef="Gateway_HD" targetRef="EndEvent_HD" name="Sim" />
+    <bpmn2:sequenceFlow id="SF5" sourceRef="Gateway_HD" targetRef="Task_N1" name="Nao" />
+    <bpmn2:sequenceFlow id="SF6" sourceRef="Task_N1" targetRef="Gateway_N1" />
+    <bpmn2:sequenceFlow id="SF7" sourceRef="Gateway_N1" targetRef="EndEvent_N1" name="Sim" />
+    <bpmn2:sequenceFlow id="SF8" sourceRef="Gateway_N1" targetRef="Task_N2" name="Nao" />
+    <bpmn2:sequenceFlow id="SF9" sourceRef="Task_N2" targetRef="Gateway_N2" />
+    <bpmn2:sequenceFlow id="SF10" sourceRef="Gateway_N2" targetRef="EndEvent_N2" name="Resolvido" />
+    <bpmn2:sequenceFlow id="SF11" sourceRef="Gateway_N2" targetRef="Task_N3" name="Falha rara / de produto" />
+    <bpmn2:sequenceFlow id="SF12" sourceRef="Gateway_N2" targetRef="Task_Redes" name="Problema de rede" />
+    <bpmn2:sequenceFlow id="SF13" sourceRef="Gateway_N2" targetRef="Task_Infra" name="Problema de infraestrutura" />
+    <bpmn2:sequenceFlow id="SF14" sourceRef="Gateway_N2" targetRef="Task_Field" name="Requer atendimento presencial" />
+    <bpmn2:sequenceFlow id="SF15" sourceRef="Task_N3" targetRef="EndEvent_N3" />
+    <bpmn2:sequenceFlow id="SF16" sourceRef="Task_Redes" targetRef="EndEvent_Redes" />
+    <bpmn2:sequenceFlow id="SF17" sourceRef="Task_Infra" targetRef="EndEvent_Infra" />
+    <bpmn2:sequenceFlow id="SF18" sourceRef="Task_Field" targetRef="EndEvent_Field" />
+  </bpmn2:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="0" y="0" width="1450" height="900" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Usuario_di" bpmnElement="Lane_Usuario" isHorizontal="true">
+        <dc:Bounds x="30" y="0" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ServiceDesk_di" bpmnElement="Lane_ServiceDesk" isHorizontal="true">
+        <dc:Bounds x="30" y="100" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_HelpDesk_di" bpmnElement="Lane_HelpDesk" isHorizontal="true">
+        <dc:Bounds x="30" y="200" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_N1_di" bpmnElement="Lane_N1" isHorizontal="true">
+        <dc:Bounds x="30" y="300" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_N2_di" bpmnElement="Lane_N2" isHorizontal="true">
+        <dc:Bounds x="30" y="400" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_N3_di" bpmnElement="Lane_N3" isHorizontal="true">
+        <dc:Bounds x="30" y="500" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Redes_di" bpmnElement="Lane_Redes" isHorizontal="true">
+        <dc:Bounds x="30" y="600" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Infra_di" bpmnElement="Lane_Infra" isHorizontal="true">
+        <dc:Bounds x="30" y="700" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Field_di" bpmnElement="Lane_Field" isHorizontal="true">
+        <dc:Bounds x="30" y="800" width="1420" height="100" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="60" y="32" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ServiceDesk_di" bpmnElement="Task_ServiceDesk">
+        <dc:Bounds x="150" y="110" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HelpDesk_di" bpmnElement="Task_HelpDesk">
+        <dc:Bounds x="320" y="210" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HD_di" bpmnElement="Gateway_HD">
+        <dc:Bounds x="480" y="225" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_HD_di" bpmnElement="EndEvent_HD">
+        <dc:Bounds x="560" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_N1_di" bpmnElement="Task_N1">
+        <dc:Bounds x="650" y="310" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_N1_di" bpmnElement="Gateway_N1">
+        <dc:Bounds x="810" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_N1_di" bpmnElement="EndEvent_N1">
+        <dc:Bounds x="880" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_N2_di" bpmnElement="Task_N2">
+        <dc:Bounds x="940" y="410" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_N2_di" bpmnElement="Gateway_N2">
+        <dc:Bounds x="1100" y="425" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_N2_di" bpmnElement="EndEvent_N2">
+        <dc:Bounds x="1170" y="432" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_N3_di" bpmnElement="Task_N3">
+        <dc:Bounds x="1230" y="510" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Redes_di" bpmnElement="Task_Redes">
+        <dc:Bounds x="1230" y="610" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Infra_di" bpmnElement="Task_Infra">
+        <dc:Bounds x="1230" y="710" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Field_di" bpmnElement="Task_Field">
+        <dc:Bounds x="1230" y="810" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_N3_di" bpmnElement="EndEvent_N3">
+        <dc:Bounds x="1370" y="532" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Redes_di" bpmnElement="EndEvent_Redes">
+        <dc:Bounds x="1370" y="632" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Infra_di" bpmnElement="EndEvent_Infra">
+        <dc:Bounds x="1370" y="732" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Field_di" bpmnElement="EndEvent_Field">
+        <dc:Bounds x="1370" y="832" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="SF1_di" bpmnElement="SF1">
+        <di:waypoint x="96" y="50" />
+        <di:waypoint x="150" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF2_di" bpmnElement="SF2">
+        <di:waypoint x="270" y="150" />
+        <di:waypoint x="320" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF3_di" bpmnElement="SF3">
+        <di:waypoint x="440" y="250" />
+        <di:waypoint x="480" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF4_di" bpmnElement="SF4">
+        <di:waypoint x="530" y="250" />
+        <di:waypoint x="560" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF5_di" bpmnElement="SF5">
+        <di:waypoint x="505" y="275" />
+        <di:waypoint x="650" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF6_di" bpmnElement="SF6">
+        <di:waypoint x="770" y="350" />
+        <di:waypoint x="810" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF7_di" bpmnElement="SF7">
+        <di:waypoint x="860" y="350" />
+        <di:waypoint x="880" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF8_di" bpmnElement="SF8">
+        <di:waypoint x="835" y="375" />
+        <di:waypoint x="940" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF9_di" bpmnElement="SF9">
+        <di:waypoint x="1060" y="450" />
+        <di:waypoint x="1100" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF10_di" bpmnElement="SF10">
+        <di:waypoint x="1150" y="450" />
+        <di:waypoint x="1170" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF11_di" bpmnElement="SF11">
+        <di:waypoint x="1125" y="475" />
+        <di:waypoint x="1230" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF12_di" bpmnElement="SF12">
+        <di:waypoint x="1125" y="475" />
+        <di:waypoint x="1230" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF13_di" bpmnElement="SF13">
+        <di:waypoint x="1125" y="475" />
+        <di:waypoint x="1230" y="750" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF14_di" bpmnElement="SF14">
+        <di:waypoint x="1125" y="475" />
+        <di:waypoint x="1230" y="850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF15_di" bpmnElement="SF15">
+        <di:waypoint x="1350" y="550" />
+        <di:waypoint x="1370" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF16_di" bpmnElement="SF16">
+        <di:waypoint x="1350" y="650" />
+        <di:waypoint x="1370" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF17_di" bpmnElement="SF17">
+        <di:waypoint x="1350" y="750" />
+        <di:waypoint x="1370" y="750" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF18_di" bpmnElement="SF18">
+        <di:waypoint x="1350" y="850" />
+        <di:waypoint x="1370" y="850" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>`;
+
+    // Knowledge Base Data
+    const rolesData = [
+      {
+        id: "Lane_Usuario",
+        title: "Usuário",
+        icon: "fa-user",
+        color: "blue",
+        badge: "Ponto Inicial",
+        scope: "Colaborador ou cliente final com necessidade de suporte técnico.",
+        activities: [
+          "Identifica falha, lentidão ou solicitação de serviço",
+          "Abre o ticket via Portal/E-mail/Telefone com dados completos",
+          "Fornece prints, evidências e descrição do problema"
+        ],
+        firstResponse: "Imediato",
+        slaResolution: "N/A"
+      },
+      {
+        id: "Lane_ServiceDesk",
+        title: "Service Desk",
+        icon: "fa-headset",
+        color: "indigo",
+        badge: "SPOC / Governança",
+        scope: "Ponto Único de Contato (SPOC) para governança e monitoramento do ciclo de vida dos chamados.",
+        activities: [
+          "Registra e categoriza o ticket no sistema de ITSM",
+          "Mapeia impacto, urgência e prioridade",
+          "Mantém a comunicação e atualiza o usuário sobre status",
+          "Monitora os prazos de SLA"
+        ],
+        firstResponse: "15 min",
+        slaResolution: "N/A (Gestão)"
+      },
+      {
+        id: "Lane_HelpDesk",
+        title: "Help Desk",
+        icon: "fa-circle-question",
+        color: "cyan",
+        badge: "Atendimento Rápido",
+        scope: "Atendimento inicial focado em dúvidas frequentes e soluções conhecidas imediatas.",
+        activities: [
+          "Orientação rápida de utilização de softwares",
+          "Resolução em Primeiro Contato (First Contact Resolution - FCR)",
+          "Direcionamento para N1 em caso de necessidade de procedimentos específicos"
+        ],
+        firstResponse: "15 min",
+        slaResolution: "1 hora"
+      },
+      {
+        id: "Lane_N1",
+        title: "Suporte N1",
+        icon: "fa-gears",
+        color: "teal",
+        badge: "Triagem & Acessos",
+        scope: "Suporte de primeira linha técnica com base em roteiros e procedimentos operacionais padrão (SOP).",
+        activities: [
+          "Reset de senhas e desbloqueio de contas de usuário",
+          "Concessão de permissões básicas de acesso",
+          "Aplicações de soluções da Base de Conhecimento (KBA)",
+          "Coleta de logs iniciais"
+        ],
+        firstResponse: "30 min",
+        slaResolution: "4 horas"
+      },
+      {
+        id: "Lane_N2",
+        title: "Suporte N2",
+        icon: "fa-laptop-code",
+        color: "amber",
+        badge: "Análise Técnica",
+        scope: "Investigação avançada de incidentes complexos e correções no ambiente de trabalho.",
+        activities: [
+          "Análise profunda de causa e diagnóstico técnico",
+          "Instalação e patch de sistemas e softwares operacionais",
+          "Decisão de escalamento técnico especializado (N3, Redes, Infra, Field)"
+        ],
+        firstResponse: "1 hora",
+        slaResolution: "8 horas"
+      },
+      {
+        id: "Lane_N3",
+        title: "Suporte N3",
+        icon: "fa-bug",
+        color: "purple",
+        badge: "Especialistas / Vendors",
+        scope: "Engenharia de produto, arquitetura de sistemas e suporte de terceiros/fabricantes.",
+        activities: [
+          "Análise de causa raiz (Problem Management)",
+          "Abertura de chamados com fabricantes (Microsoft, Cisco, Dell, etc.)",
+          "Correção de falhas raras, erros de compilação ou arquitetura"
+        ],
+        firstResponse: "2 horas",
+        slaResolution: "24 a 48 horas"
+      },
+      {
+        id: "Lane_Redes",
+        title: "Analista de Redes",
+        icon: "fa-network-wired",
+        color: "sky",
+        badge: "Conectividade",
+        scope: "Gestão e sustentação dos ambientes de comunicação de dados e segurança de rede.",
+        activities: [
+          "Diagnóstico de problemas em Wi-Fi corporativo, VPN e LAN",
+          "Liberação de regras em Firewalls e proxies",
+          "Verificação de switches, roteadores e qualidade de link"
+        ],
+        firstResponse: "1 hora",
+        slaResolution: "6 horas"
+      },
+      {
+        id: "Lane_Infra",
+        title: "Analista de Infraestrutura",
+        icon: "fa-server",
+        color: "emerald",
+        badge: "Servidores & Nuvem",
+        scope: "Sustentação dos servidores centrais, identidade, cloud e segurança da informação.",
+        activities: [
+          "Ajustes no Active Directory (AD), Microsoft 365 e Azure/AWS",
+          "Gerenciamento de servidores de arquivos, backup e restauração",
+          "Monitoramento de espaço em disco e performance de servidores"
+        ],
+        firstResponse: "1 hora",
+        slaResolution: "6 horas"
+      },
+      {
+        id: "Lane_Field",
+        title: "Field Services",
+        icon: "fa-screwdriver-wrench",
+        color: "rose",
+        badge: "Atendimento Presencial",
+        scope: "Suporte físico 'On-site' aos equipamentos e infraestrutura do usuário final.",
+        activities: [
+          "Manutenção e substituição física de computadores e periféricos",
+          "Organização de cabeamento e pontos de rede",
+          "Configuração física de salas de reunião e infraestrutura presencial"
+        ],
+        firstResponse: "2 horas",
+        slaResolution: "8 horas"
+      }
+    ];
+
+    let bpmnViewer;
+    let currentZoom = 1;
+
+    // Initialize Page
+    document.addEventListener("DOMContentLoaded", function () {
+      initBpmnViewer();
+      renderRolesCards();
+      renderSlaTable();
+      renderLanesQuickNav();
+    });
+
+    function initBpmnViewer() {
+      bpmnViewer = new BpmnJS({
+        container: '#canvas'
+      });
+
+      bpmnViewer.importXML(bpmnXML).then(function (result) {
+        const canvas = bpmnViewer.get('canvas');
+        canvas.zoom('fit-viewport');
+        currentZoom = canvas.zoom();
+        updateZoomIndicator();
+
+        // Event listener for selection
+        const eventBus = bpmnViewer.get('eventBus');
+        eventBus.on('element.click', function (e) {
+          inspectElement(e.element);
+        });
+
+      }).catch(function (err) {
+        console.error('Erro ao carregar o diagrama BPMN:', err);
+      });
+    }
+
+    function inspectElement(element) {
+      const titleEl = document.getElementById('inspector-title');
+      const descEl = document.getElementById('inspector-desc');
+      const badgeEl = document.getElementById('selected-type-badge');
+
+      if (!element) return;
+
+      const name = element.businessObject.name || element.id;
+      const type = element.type.replace('bpmn:', '');
+
+      badgeEl.innerText = type;
+
+      // Check if it's a known lane or task
+      const matchedRole = rolesData.find(r => r.id === element.id || r.title.toLowerCase() === name.toLowerCase());
+
+      if (matchedRole) {
+        titleEl.innerText = matchedRole.title;
+        descEl.innerHTML = `
+          <div class="space-y-3">
+            <span class="inline-block px-2 py-0.5 text-[10px] font-semibold bg-blue-500/20 text-blue-300 rounded border border-blue-500/30">
+              ${matchedRole.badge}
+            </span>
+            <p class="text-xs text-slate-300 leading-relaxed">${matchedRole.scope}</p>
+            <div class="pt-2">
+              <strong class="text-[11px] text-slate-400 uppercase tracking-wider block mb-1">Principais Atividades:</strong>
+              <ul class="list-disc pl-4 space-y-1 text-slate-300 text-xs">
+                ${matchedRole.activities.map(a => `<li>${a}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="pt-2 grid grid-cols-2 gap-2 text-[11px]">
+              <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                <span class="text-slate-400 block">SLA 1ª Resp.</span>
+                <span class="font-bold text-emerald-400">${matchedRole.firstResponse}</span>
+              </div>
+              <div class="bg-slate-800 p-2 rounded border border-slate-700">
+                <span class="text-slate-400 block">SLA Resolução</span>
+                <span class="font-bold text-blue-400">${matchedRole.slaResolution}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        titleEl.innerText = name;
+        descEl.innerText = `Elemento de fluxo do BPMN (${type}). Pertence ao processo padronizado de suporte de TI.`;
+      }
+    }
+
+    function zoomIn() {
+      if (!bpmnViewer) return;
+      const canvas = bpmnViewer.get('canvas');
+      currentZoom += 0.2;
+      canvas.zoom(currentZoom);
+      updateZoomIndicator();
+    }
+
+    function zoomOut() {
+      if (!bpmnViewer) return;
+      const canvas = bpmnViewer.get('canvas');
+      currentZoom = Math.max(0.2, currentZoom - 0.2);
+      canvas.zoom(currentZoom);
+      updateZoomIndicator();
+    }
+
+    function zoomReset() {
+      if (!bpmnViewer) return;
+      const canvas = bpmnViewer.get('canvas');
+      canvas.zoom('fit-viewport');
+      currentZoom = canvas.zoom();
+      updateZoomIndicator();
+    }
+
+    function updateZoomIndicator() {
+      document.getElementById('zoom-indicator').innerText = Math.round(currentZoom * 100) + '%';
+    }
+
+    function focusOnElement(elementId) {
+      switchTab('diagram');
+      setTimeout(() => {
+        if (!bpmnViewer) return;
+        const elementRegistry = bpmnViewer.get('elementRegistry');
+        const element = elementRegistry.get(elementId);
+        if (element) {
+          const canvas = bpmnViewer.get('canvas');
+          canvas.scrollToElement(element);
+          inspectElement(element);
+        }
+      }, 100);
+    }
+
+    function switchTab(tab) {
+      const diagTab = document.getElementById('tab-diagram-view');
+      const rolesTab = document.getElementById('tab-roles-view');
+      const slaTab = document.getElementById('tab-sla-view');
+
+      const btnDiag = document.getElementById('btn-tab-diagram');
+      const btnRoles = document.getElementById('btn-tab-roles');
+      const btnSla = document.getElementById('btn-tab-sla');
+
+      diagTab.classList.add('hidden');
+      rolesTab.classList.add('hidden');
+      slaTab.classList.add('hidden');
+
+      btnDiag.className = "px-3.5 py-1.5 text-xs font-semibold rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all flex items-center gap-2";
+      btnRoles.className = "px-3.5 py-1.5 text-xs font-semibold rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all flex items-center gap-2";
+      btnSla.className = "px-3.5 py-1.5 text-xs font-semibold rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all flex items-center gap-2";
+
+      if (tab === 'diagram') {
+        diagTab.classList.remove('hidden');
+        btnDiag.className = "px-3.5 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all flex items-center gap-2 shadow";
+      } else if (tab === 'roles') {
+        rolesTab.classList.remove('hidden');
+        btnRoles.className = "px-3.5 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all flex items-center gap-2 shadow";
+      } else if (tab === 'sla') {
+        slaTab.classList.remove('hidden');
+        btnSla.className = "px-3.5 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white transition-all flex items-center gap-2 shadow";
+      }
+    }
+
+    function renderLanesQuickNav() {
+      const container = document.getElementById('lanes-quick-nav');
+      container.innerHTML = rolesData.map(r => `
+        <button onclick="focusOnElement('${r.id}')" class="w-full text-left px-3 py-2 rounded bg-slate-900/60 hover:bg-slate-700/80 border border-slate-700/50 text-xs flex items-center justify-between group transition">
+          <span class="flex items-center gap-2 text-slate-300 group-hover:text-white">
+            <i class="fa-solid ${r.icon} text-blue-400 w-4 text-center"></i>
+            ${r.title}
+          </span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-500 group-hover:text-blue-400"></i>
+        </button>
+      `).join('');
+    }
+
+    function renderRolesCards() {
+      const container = document.getElementById('roles-cards-grid');
+      container.innerHTML = rolesData.map(r => `
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between hover:border-slate-600 transition shadow-sm">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <i class="fa-solid ${r.icon}"></i>
+                </div>
+                <h3 class="font-bold text-white text-base">${r.title}</h3>
+              </div>
+              <span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-700 text-slate-300 rounded">${r.badge}</span>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed mb-4">${r.scope}</p>
+
+            <div class="space-y-2 mb-4">
+              <span class="text-[11px] font-semibold text-slate-300 uppercase tracking-wider block">Responsabilidades:</span>
+              <ul class="space-y-1.5">
+                ${r.activities.map(a => `
+                  <li class="text-xs text-slate-300 flex items-start gap-2">
+                    <i class="fa-solid fa-check text-blue-400 text-[10px] mt-1"></i>
+                    <span>${a}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-700 flex justify-between items-center text-xs">
+            <span class="text-slate-400">SLA Resolução: <strong class="text-emerald-400 font-mono">${r.slaResolution}</strong></span>
+            <button onclick="focusOnElement('${r.id}')" class="text-blue-400 hover:text-blue-300 font-medium text-xs flex items-center gap-1">
+              Ver no Fluxo <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSlaTable() {
+      const container = document.getElementById('sla-table-body');
+      container.innerHTML = rolesData.map(r => `
+        <tr class="hover:bg-slate-800/50 transition">
+          <td class="px-4 py-3.5 font-medium text-white flex items-center gap-2">
+            <i class="fa-solid ${r.icon} text-blue-400"></i>
+            ${r.title}
+          </td>
+          <td class="px-4 py-3.5 text-slate-300">${r.scope}</td>
+          <td class="px-4 py-3.5 font-mono text-emerald-400">${r.firstResponse}</td>
+          <td class="px-4 py-3.5 font-mono text-blue-400">${r.slaResolution}</td>
+          <td class="px-4 py-3.5 text-slate-400">${getEscalationTrigger(r.id)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function getEscalationTrigger(id) {
+      switch (id) {
+        case 'Lane_Usuario': return 'Abertura de chamado pendente de informações';
+        case 'Lane_ServiceDesk': return 'Chamado não resolvido no atendimento primário';
+        case 'Lane_HelpDesk': return 'Necessidade de intervenção técnica em sistemas/acessos (N1)';
+        case 'Lane_N1': return 'Causa desconhecida ou necessidade de alteração de configuração avançada (N2)';
+        case 'Lane_N2': return 'Identificação do tipo de especialidade (N3, Redes, Infra ou Field)';
+        case 'Lane_N3': return 'Aguardando atualização / patch do fabricante do software';
+        case 'Lane_Redes': return 'Falha física de cabeamento local -> Field Services';
+        case 'Lane_Infra': return 'Manutenção presencial em servidor local -> Field Services';
+        case 'Lane_Field': return 'Necessidade de reposição de peça / garantia do fabricante';
+        default: return 'Escalamento por tempo limite de SLA';
+      }
+    }
+
+    function exportDiagramSVG() {
+      if (!bpmnViewer) return;
+      bpmnViewer.saveSVG().then(function (result) {
+        const svgBlob = new Blob([result.svg], { type: 'image/svg+xml;charset=utf-8' });
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(svgBlob);
+        downloadLink.download = 'fluxo-atendimento-ti.svg';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }).catch(err => {
+        console.error('Erro ao exportar SVG:', err);
+      });
+    }
+  </script>
+</body>
+</html>
