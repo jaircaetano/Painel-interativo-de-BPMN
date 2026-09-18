@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentação & Propósito da Ferramenta - Atendimento de TI</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .print-shadow-none {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen py-8 px-4 sm:px-6">
+
+  <!-- Top Action Bar (Hides when printing) -->
+  <div class="max-w-4xl mx-auto mb-6 flex justify-between items-center bg-slate-900 text-white p-4 rounded-xl shadow-md no-print">
+    <div class="flex items-center gap-3">
+      <i class="fa-solid fa-file-pdf text-red-400 text-2xl"></i>
+      <div>
+        <h1 class="text-sm font-bold">Documentação Pronta para PDF</h1>
+        <p class="text-xs text-slate-400">Clique no botão ao lado para salvar como PDF ou imprimir</p>
+      </div>
+    </div>
+    <button onclick="window.print()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-2 shadow">
+      <i class="fa-solid fa-print"></i> Salvar / Imprimir em PDF
+    </button>
+  </div>
+
+  <!-- A4 Document Wrapper -->
+  <main class="max-w-4xl mx-auto bg-white p-8 sm:p-12 rounded-xl shadow-lg border border-slate-200 print-shadow-none text-slate-800 space-y-8">
+    
+    <!-- Document Header -->
+    <header class="border-b-2 border-slate-800 pb-6">
+      <div class="flex justify-between items-start gap-4">
+        <div>
+          <span class="inline-block px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 rounded mb-2">
+            Documento de Governança Operacional
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Painel Interativo de Atendimento de TI
+          </h1>
+          <p class="text-sm font-medium text-blue-700 mt-1">
+            Manual de Governança, Mapeamento de Processos (BPMN) & Matriz de Escalamento
+          </p>
+        </div>
+        <div class="text-right text-xs text-slate-500 space-y-1">
+          <p><strong class="text-slate-700">Versão:</strong> 1.0</p>
+          <p><strong class="text-slate-700">Modelo:</strong> ITSM / ITIL v4</p>
+          <p><strong class="text-slate-700">Data:</strong> Setembro de 2026</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- SECTION 1: PURPOSE -->
+    <section class="space-y-4">
+      <h2 class="text-lg font-bold text-slate-900 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
+        <i class="fa-solid fa-bullseye text-blue-600"></i> 1. Propósito da Ferramenta
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+        O <strong>Painel Interativo de Atendimento de TI</strong> é uma plataforma de governança operacional e visualização gráfica desenvolvida para padronizar, operacionalizar e esclarecer o fluxo de chamados de suporte em toda a empresa.
+      </p>
+      <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+        A solução resolve gargalos críticos em operações de suporte tecnológico: a indefinição de responsabilidades (<em>"Quem faz o que"</em>) e o desgaste gerado pelo repasse indevido de chamados entre níveis técnicos (<em>ping-pong de chamados</em>).
+      </p>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+        <h3 class="text-xs font-bold text-blue-900 uppercase tracking-wider">Objetivos Estratégicos:</h3>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-check text-blue-600 mt-0.5"></i>
+            <span><strong>Padronização ITSM/ITIL:</strong> Mapeamento visual estandardizado do ciclo de vida dos incidentes.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-check text-blue-600 mt-0.5"></i>
+            <span><strong>Matriz de Atribuições Clara:</strong> Eliminação de ambiguidades na divisão de tarefas entre os 9 níveis.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-check text-blue-600 mt-0.5"></i>
+            <span><strong>Redução do MTTR:</strong> Direcionamento assertivo logo na primeira triagem para diminuir tempo de resolução.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-check text-blue-600 mt-0.5"></i>
+            <span><strong>Capacitação & Onboarding:</strong> Guia interativo e de fácil consulta para treinamento de novos analistas.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 2: ARCHITECTURE -->
+    <section class="space-y-4">
+      <h2 class="text-lg font-bold text-slate-900 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
+        <i class="fa-solid fa-cubes text-blue-600"></i> 2. Módulos da Ferramenta
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-diagram-project text-blue-600"></i> Diagrama BPMN
+          </h3>
+          <p class="text-slate-600">Visualizador vetorial com suporte a zoom, navegação por raias (lanes) e inspeção detalhada de tarefas.</p>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-id-card text-blue-600"></i> Cartões de Papéis
+          </h3>
+          <p class="text-slate-600">Fichas técnicas individuais contendo escopo, lista de atividades executadas e metas de SLA.</p>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+          <h3 class="font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-table-list text-blue-600"></i> Matriz de SLA
+          </h3>
+          <p class="text-slate-600">Tabela comparativa de prazos operacionais e guia de decisão para transição de chamados.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ROLES & RESPONSIBILITIES -->
+    <section class="space-y-4 page-break">
+      <h2 class="text-lg font-bold text-slate-900 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
+        <i class="fa-solid fa-users-gear text-blue-600"></i> 3. Mapeamento de Papéis ("Quem Faz o Que")
+      </h2>
+      
+      <div class="space-y-3 text-xs">
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">1. Usuário Final (Solicitante)</h3>
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">Origem</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Colaborador afetado por dúvida, falha ou necessidade de serviço de tecnologia.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Registra a necessidade nos canais oficiais, fornece evidências (capturas de tela/logs) e valida a solução após a conclusão do atendimento.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">2. Service Desk (SPOC)</h3>
+            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-semibold text-[10px]">Governança</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Central de governança e acompanhamento do ciclo de vida dos chamados.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Classifica e categoriza chamados, define prioridade/urgência, atualiza o usuário e garante a observância dos prazos de SLA global.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">3. Help Desk</h3>
+            <span class="px-2 py-0.5 bg-cyan-100 text-cyan-800 rounded font-semibold text-[10px]">Atendimento Rápido</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Atendimento inicial focado em dúvidas frequentes e soluções conhecidas.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Esclarece dúvidas cotidianas, presta orientações operacionais e busca a resolução imediata em primeiro contato (FCR).</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">4. Suporte N1</h3>
+            <span class="px-2 py-0.5 bg-teal-100 text-teal-800 rounded font-semibold text-[10px]">Triagem & Acessos</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Suporte de primeira linha guiado por Procedimentos Operacionais Padrão (SOP).</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Reset de senhas, desbloqueio de contas (AD, M365), concessão de permissões básicas e aplicação de scripts padronizados.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">5. Suporte N2</h3>
+            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-semibold text-[10px]">Análise Técnica</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Diagnóstico aprofundado e resolução de incidentes complexos no ambiente do usuário.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Investigação de causas de erro em sistemas operacionais e aplicações, instalação de atualizações e tomada de decisão sobre escalamento especialista.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">6. Suporte N3 / Vendors</h3>
+            <span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-semibold text-[10px]">Engenharia / Produto</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Sustentação avançada, arquitetura de sistemas e interface com fabricantes.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Gestão de Problemas (análise de causa raiz), abertura de chamados com fornecedores de hardware/software e correção de bugs raras.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">7. Analista de Redes</h3>
+            <span class="px-2 py-0.5 bg-sky-100 text-sky-800 rounded font-semibold text-[10px]">Conectividade</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Infraestrutura de comunicação de dados, conectividade e segurança de perímetro.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Diagnóstico de latência, quedas de VPN, problemas de Wi-Fi, liberação de regras em Firewalls e configuração de switches/roteadores.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">8. Analista de Infraestrutura</h3>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold text-[10px]">Servidores & Nuvem</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Administração de servidores, identidades centrais, Cloud e integridade de dados.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Gestão de Active Directory, ambientes AWS/Azure, M365, políticas de segurança, backups e rotinas de restauração.</p>
+        </div>
+
+        <div class="p-3 border border-slate-200 rounded-lg bg-slate-50">
+          <div class="flex justify-between items-center mb-1">
+            <h3 class="font-bold text-slate-900 text-sm">9. Field Services</h3>
+            <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-semibold text-[10px]">Atendimento Presencial</span>
+          </div>
+          <p class="text-slate-600 mb-1"><strong>Escopo:</strong> Suporte presencial de hardware, cabeamento e equipamentos locais.</p>
+          <p class="text-slate-700"><strong>Atividades:</strong> Troca e reparo físico de computadores/periféricos, organização de pontos de rede e suporte presencial a salas de conferência.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: SLA MATRIX -->
+    <section class="space-y-4 page-break">
+      <h2 class="text-lg font-bold text-slate-900 border-l-4 border-blue-600 pl-3 flex items-center gap-2">
+        <i class="fa-solid fa-clock text-blue-600"></i> 4. Matriz Operacional de SLA & Escalamento
+      </h2>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+        <table class="w-full text-left text-xs text-slate-700">
+          <thead class="bg-slate-100 text-slate-900 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+            <tr>
+              <th class="p-2.5">Nível / Equipe</th>
+              <th class="p-2.5">SLA 1ª Resp.</th>
+              <th class="p-2.5">SLA Resolução</th>
+              <th class="p-2.5">Gatilho de Transição</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            <tr>
+              <td class="p-2.5 font-bold">Service Desk</td>
+              <td class="p-2.5 text-emerald-700 font-mono">15 min</td>
+              <td class="p-2.5 text-slate-500 font-mono">N/A</td>
+              <td class="p-2.5">Chamado registrado e pendente de atendimento inicial.</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Help Desk</td>
+              <td class="p-2.5 text-emerald-700 font-mono">15 min</td>
+              <td class="p-2.5 text-blue-700 font-mono">1 hora</td>
+              <td class="p-2.5">Necessidade de procedimentos operacionais específicos (N1).</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Suporte N1</td>
+              <td class="p-2.5 text-emerald-700 font-mono">30 min</td>
+              <td class="p-2.5 text-blue-700 font-mono">4 horas</td>
+              <td class="p-2.5">Falha técnica não catalogada na Base de Conhecimento (N2).</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Suporte N2</td>
+              <td class="p-2.5 text-emerald-700 font-mono">1 hora</td>
+              <td class="p-2.5 text-blue-700 font-mono">8 horas</td>
+              <td class="p-2.5">Decisão técnica para especialista (N3, Redes, Infra ou Field).</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Suporte N3</td>
+              <td class="p-2.5 text-emerald-700 font-mono">2 horas</td>
+              <td class="p-2.5 text-blue-700 font-mono">24–48h</td>
+              <td class="p-2.5">Identificação de erro de produto ou dependência de terceiros.</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Analista de Redes</td>
+              <td class="p-2.5 text-emerald-700 font-mono">1 hora</td>
+              <td class="p-2.5 text-blue-700 font-mono">6 horas</td>
+              <td class="p-2.5">Constatação de dano em cabeamento físico local &rarr; Field Services.</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Analista de Infra</td>
+              <td class="p-2.5 text-emerald-700 font-mono">1 hora</td>
+              <td class="p-2.5 text-blue-700 font-mono">6 horas</td>
+              <td class="p-2.5">Intervenção física em servidores ou data center &rarr; Field Services.</td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold">Field Services</td>
+              <td class="p-2.5 text-emerald-700 font-mono">2 horas</td>
+              <td class="p-2.5 text-blue-700 font-mono">8 horas</td>
+              <td class="p-2.5">Necessidade de acionamento de garantia com o fabricante.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs space-y-2">
+        <h3 class="font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Regra de Ouro do Suporte N2 (Nó de Decisão)
+        </h3>
+        <p class="text-slate-700 leading-relaxed">
+          O <strong>Suporte N2</strong> é o responsável por centralizar o diagnóstico técnico antes do repasse. O direcionamento só deve ser efetuado após a confirmação do tipo do problema:
+        </p>
+        <ul class="list-disc pl-5 space-y-1 text-slate-700">
+          <li><strong>Para N3:</strong> Erro no código do software, bug de arquitetura ou acionamento de garantia.</li>
+          <li><strong>Para Redes:</strong> Falhas em Wi-Fi corporativo, quedas de VPN, lentidão na LAN ou bloqueios de firewall.</li>
+          <li><strong>Para Infraestrutura:</strong> Indisponibilidade de servidores, falha em nuvem (Azure/AWS) ou restore de backup.</li>
+          <li><strong>Para Field Services:</strong> Defeito físico comprovado em hardware, monitor, cabo ou periférico local.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-6 border-t border-slate-200 text-center text-xs text-slate-500">
+      <p>Manual de Governança & Documentação de TI — Confidencial para Uso Interno</p>
+    </footer>
+
+  </main>
+
+</body>
+</html>
